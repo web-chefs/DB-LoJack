@@ -1,8 +1,8 @@
 # DB-LoJack
 
 [![Latest Version on Packagist][ico-version]][link-packagist]
-[![Software License][ico-license]](LICENSE.md)
-[![Total Downloads][ico-downloads]][link-downloads]
+[![Software License][ico-license]](LICENSE.md)]
+[![Total Downloads][ico-downloads]][link-downloads]]
 
 Laravel database query logger and debugger that support basic argument replacement.
 
@@ -15,6 +15,7 @@ Laravel database query logger and debugger that support basic argument replaceme
 1. Logs web and console queries
 1. DBLog facade for easy developer query debugging
 1. Configurable
+1. Default text logger support log file rotating without any dependencies on other packages
 
 ## Versions
 
@@ -44,7 +45,6 @@ __Optionall add the DB LoJack Facade__
    'DBLog' => WebChefs\DBLoJack\Facades\DbLogger::class,
 ];
 ```
-
 
 ## Handlers
 
@@ -130,6 +130,50 @@ DBLog::isQueryable($query);
 # Check if an object is queryable and loggable returning a boolean
 DBLog::isQueryable($query, false);
 ```
+
+## Configurations
+
+Works by default out the box.
+
+To override a configuration add any of the following to your `config/database.php` file.
+
+```php
+return [
+
+    /*
+     |--------------------------------------------------------------------------
+     | Lo-Jack Query Log
+     |--------------------------------------------------------------------------
+     |
+     | To debug database queries by logging to a text file found in
+     | storage/logs. We should avoid running this in production.
+     |
+     */
+
+    'query_log' => [
+
+        # Enable query logging only when debugging is enabled and env is local
+        'enabled' => env('APP_DEBUG', false) && env('APP_ENV', 'local') == 'local',
+
+        # Max files number of files to keep, logs are rotated daily
+        'max_files' => 10,
+
+        # Type of handler to collect the query lots and action the log writer
+        'handler' => 'middleware', // Options middleware (default) or listener
+
+        # Default logging location
+        'log_path' => storage_path('logs/db'),
+
+    ],
+
+];
+```
+
+## Security & Information Leaking
+
+It is generally a very bad idea to log full database queries in production with actual parameters / bindings as this will end up logging sensitive information like usernames, passwords and sessions ids to a generally low security location in the form of application logs.
+
+For this reason if the Laravel environment is set to `production` or `staging` queries will be logged but without bindings being replace and queries will be left with `?` placeholders.
 
 ## Standards
 

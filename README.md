@@ -35,6 +35,7 @@ __Add Service Provider to `config/app.php`__
    // Other Service Providers
    WebChefs\DBLoJack\DBLoJackServiceProvider::class,
 ];
+```
 
 __Optionall add the DB LoJack Facade__
 
@@ -44,13 +45,12 @@ __Optionall add the DB LoJack Facade__
 ];
 ```
 
-## Usage
 
-### Handlers
+## Handlers
 
 There are two handlers available each different pros and cons.
 
-#### Middleware (Default)
+### Middleware (Default)
 
 Uses Laravel HTTP kernel middleware to enable database query logging and at the end of the request logs all queries as single block.
 
@@ -77,7 +77,7 @@ Add Middleware to `App\Http\Kernel`
     ];
 ```
 
-#### Event Listener
+### Event Listener
 
 Uses a Laravel Event listener database events. Regardless of configurations this method is used in console / artisan applications.
 
@@ -95,7 +95,7 @@ __Setup__
 
 Configure handler to `listener`.
 
-### Facade / Developer
+## Developer Usage (Facade)
 
 ```php
 # Get formated query builder query
@@ -115,7 +115,7 @@ DBLog::logQuery($query);
 # Debug query using dd();
 DBLog::debugQuery($query);
 
-# Check if isEnabled
+# Check if enabled
 DBLog::isEnabled();
 
 # Check if will log for specific handler

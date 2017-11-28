@@ -3,7 +3,7 @@
 namespace WebChefs\DBLoJack;
 
 // Package
-use WebChefs\DBLoJack\DBLoJackHelpers;
+use WebChefs\DBLoJack\DBLoJack;
 
 // Framework
 use Illuminate\Support\Arr;
@@ -24,8 +24,8 @@ class DBLoJackServiceProvider extends ServiceProvider
         $this->mergeConfigFrom(__DIR__ . '/Config.php', 'database');
 
         // Facade
-        $this->app->singleton('db_lojack.helpers', function ($app) {
-            return $app->make(DBLoJackHelpers::class);
+        $this->app->singleton('db_lojack', function ($app) {
+            return $app->make(DBLoJack::class);
         });
     }
 
@@ -36,7 +36,7 @@ class DBLoJackServiceProvider extends ServiceProvider
      */
     public function boot()
     {
-        $helper = $this->app->make('db_lojack.helpers');
+        $helper = $this->app->make('db_lojack');
 
         if ($helper->isLogging('listener')) {
 

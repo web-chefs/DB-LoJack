@@ -1,9 +1,10 @@
 <?php
 
-namespace WebChefs\DBLoJack;
+namespace WebChefs\DBLoJack\Loggers;
 
 // Package
 use WebChefs\DBLoJack\DBLoJackHelpers;
+use WebChefs\DBLoJack\Contracts\QueryStoreInterface;
 
 // Framework
 use Illuminate\Support\Arr;
@@ -12,16 +13,13 @@ use Illuminate\Support\Arr;
 use File;
 use Config;
 
-class DBLoJackLogWriter
+class RotatingTextFileLogger
 {
-    protected $helper;
-    protected $connection;
-    protected $context;
-    protected $queries      = [];
+    protected $queries;
+
     protected $maxFiles     = 0;
     protected $logFile      = null;
     protected $mustRotate   = false;
-    protected $isProduction = false;
 
     /**
      * Constructor that prepares and writes the logs.
@@ -31,16 +29,10 @@ class DBLoJackLogWriter
      *
      * @return void
      */
-    public function __construct(array $queries, $connection = null)
+    public function __construct(QueryStoreInterface $queries)
     {
-        $app                = app();
-        $this->context      = $app->runningInConsole() ? 'console' : 'web';
-        $this->helper       = $app->make('db_lojack.helpers');
-        $this->isProduction = $app->environment('production', 'staging');
-
-        $this->connection = $connection;
         $this->queries    = $queries;
-        $this->maxFiles   = (int)Config::get('database.query_log_max_files');
+        $this->maxFiles   = (int)Config::get('database.query_log.max_files');
         $this->mustRotate = false;
     }
 
@@ -51,7 +43,7 @@ class DBLoJackLogWriter
      */
     public function writeLogs()
     {
-        $logs = $this->prepareQueryLogs();
+        $logs = $this->queries->formatLogs();
 
         // Append to log
         if (!empty($logs)) {
@@ -62,68 +54,14 @@ class DBLoJackLogWriter
     }
 
     /**
-     * Log database queries and if needed rotate logs.
-     *
-     * @return null
-     */
-    protected function prepareQueryLogs()
-    {
-        // Retrieve all executed queries
-        $queries = $this->queries;
-
-        // If no queries exit early
-        if (empty($queries)) {
-            return;
-        }
-
-        // Log::debug('DB logger queries: ' . print_r($queries, true));
-        // dd($queries); // We cant use ddd()
-
-        // Build log entry
-        $logs = [];
-        foreach ($queries as $query) {
-
-            $log               = [];
-            $log['date']       = date('Y-m-d H:i:s', time());
-            $log['time']       = Arr::get($query, 'time');
-            $log['connection'] = $this->connection;
-            // Dont format SQL with bindings when running in production
-            $log['query']      = $this->isProduction ? $query['query'] : $this->helper->formatSql($query['query'], $query['bindings']);
-
-            $logs[] = $this->getLogBoundary('Before');
-            $logs[] = implode(', ', array_map(
-                function ($v, $k) {
-                    return sprintf("%s=%s", $k, $v);
-                }, $log, array_keys($log)
-            ));
-            $logs[] = $this->getLogBoundary('After');
-        }
-
-        return $logs;
-    }
-
-    /**
-     * Build a formated string for the boundary between log writing as a single
-     * request / command can make multiple queries.
-     *
-     * @return string
-     */
-    protected function getLogBoundary($type)
-    {
-        $env    = app('env');
-        $label  = $this->helper->logLabel();
-        $logger = Config::get('database.query_log_type');
-        return "---------BOUNDRY {$type}-{$logger} [{$env}] ({$label})---------";
-    }
-
-    /**
      * Set logfile path and filename
      *
      * @return  null
      */
     protected function setLogFile()
     {
-        $this->logFile = storage_path('logs/db/db_query.' . $this->context . '.' . date('Y-m-d') . '.log');
+        $logPath       = Config::get('database.query_log.log_path');
+        $this->logFile = $logPath . '/db_query.' . $this->queries->context . '.' . date('Y-m-d') . '.log';
 
         if (!File::exists($this->logFile)) {
             $this->mustRotate = true;
@@ -167,7 +105,7 @@ class DBLoJackLogWriter
             $this->rotate();
         }
 
-        File::append($this->logFile, implode(PHP_EOL, $logs) . PHP_EOL);
+        File::append($this->logFile, $logs->implode(PHP_EOL) . PHP_EOL);
     }
 
     /**
@@ -185,7 +123,7 @@ class DBLoJackLogWriter
             return;
         }
 
-        $logFiles = glob($dir . '/db_query.' . $this->context . '.*.log' );
+        $logFiles = glob($dir . '/db_query.' . $this->queries->context . '.*.log' );
 
         if ($this->maxFiles >= count($logFiles)) {
             // no files to remove

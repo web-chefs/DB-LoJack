@@ -2,6 +2,9 @@
 
 namespace WebChefs\DBLoJack\Facades;
 
+// Framework
+use Illuminate\Support\Facades\Facade;
+
 class DbLogger extends Facade
 {
 
@@ -10,6 +13,6 @@ class DbLogger extends Facade
      *
      * @return string
      */
-    protected static function getFacadeAccessor() { return 'db_lojack.helpers'; }
+    protected static function getFacadeAccessor() { return 'db_lojack'; }
 
 }

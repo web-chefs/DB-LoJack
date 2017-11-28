@@ -1,11 +1,15 @@
 {
-    "name": "web-chefs/laravel-db-lojack",
+    "name": "web-chefs/db-lojack",
     "type": "library",
-    "description": "Laravel Database Query Logger.",
+    "description": "Laravel Database Query Logger and debug helper.",
     "keywords": [
-        "Laravel-DB-LoJack"
+        "db-lojack",
+        "laravel",
+        "logging",
+        "database",
+        "debugging"
     ],
-    "homepage": "https://github.com/web-chefs/Laravel-DB-LoJack",
+    "homepage": "https://github.com/web-chefs/DB-LoJack",
     "license": "MIT",
     "authors": [
         {

@@ -106,7 +106,7 @@ class DBLoJack
         $needle = '?';
         foreach ($bindings as $replace) {
             // Handle quoted data types
-            if (!is_bool($replace) && !is_numeric($replace) && Str::lower($replace) !== 'null') {
+            if (!is_bool($replace) && !is_int($replace) && !is_float($replace) && Str::lower($replace) !== 'null') {
                 $replace = "'$replace'";
             }
 

@@ -146,9 +146,9 @@ class DBLoJack
      *
      * @return void
      */
-    public function logQueries($queries, $connection = null)
+    public function logQueries(array $queries, $connection = null)
     {
-        Log::debug(t('Query Count #:count for :url', [
+        Log::debug($this->formatString('Query Count #:count for :url', [
             ':count' => count($queries),
             ':url'   => $this->logLabel(),
         ]));
@@ -225,7 +225,17 @@ class DBLoJack
      */
     public function makeQueryStore(array $queries, $connectionName = null)
     {
-        return new QueryCollection($queries, $connectionName);
+        $queries = collect($queries)->transform(function ($query) {
+            // Handle query objects
+            if (is_object($query) && $this->isQueryable($query)) {
+                $query = [
+                    'query'    => $query->toSql(),
+                    'bindings' => $query->getBindings(),
+                ];
+            }
+            return $query;
+        });
+        return new QueryCollection($queries->all(), $connectionName);
     }
 
     /**
@@ -238,6 +248,35 @@ class DBLoJack
     public function makeLogger(QueryStoreInterface $queries)
     {
         return new RotatingTextFileLogger($queries);
+    }
+
+    /**
+     * Build a string based on named tokens. String token modifier are supported.
+     *
+     * @ = escape
+     * : = raw
+     *
+     * @param   string  $string
+     * @param   array   $args
+     *
+     * @return  string
+     */
+    protected function formatString($string, array $args = array())
+    {
+        // Transform arguments before inserting them.
+        foreach ($args as $key => $value) {
+            switch ($key[0]) {
+                case '@':
+                default:
+                    // Escaped and placeholder.
+                    $args[$key] = e($value);
+                    break;
+
+                case ':':
+                    // Pass-through.
+            }
+        }
+        return strtr($string, $args);
     }
 
 }

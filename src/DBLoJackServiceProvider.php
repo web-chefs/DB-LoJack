@@ -36,26 +36,53 @@ class DBLoJackServiceProvider extends ServiceProvider
      */
     public function boot()
     {
-        $helper = $this->app->make('db_lojack');
+        $this->addQueryLogListeners();
+    }
 
-        if ($helper->isLogging('listener')) {
+    /**
+     * Register listener with each database connection.
+     *
+     * @return void
+     */
+    protected function addQueryLogListeners()
+    {
+        // DB LoJack Service
+        $service = $this->app->make('db_lojack');
 
-            $this->app['db']->listen(function($query, $bindings = null, $time = null, $name = null) use ($helper) {
+        // Listener callback
+        $callback = function($query, $bindings = null, $time = null, $connection = null) use ($service) {
+            if ($service->isLogging('listener')) {
+                $this->logQuery($service, $query, $bindings, $time, $connection);
+            }
+        };
 
-                $connection = $name;
+        // Listen to DB query events
+        $this->app['db']->listen($callback);
+    }
 
-                // Convert into array
-                $queries    = compact('query', 'bindings', 'time');
+    /**
+     * Log query from listener
+     *
+     * @param  DBLoJack $service
+     * @param  string $query
+     * @param  array  $bindings
+     * @param  float  $time
+     * @param  string $name
+     *
+     * @return void
+     */
+    protected function logQuery($service, $query, $bindings = null, $time = null, $connection = null)
+    {
+        // Convert into array
+        $queries    = compact('query', 'bindings', 'time');
 
-                if ($query instanceof QueryExecuted) {
-                    $connection = $query->connection->getName();
-                    Arr::set($queries, 'query', $query->sql);
-                    Arr::set($queries, 'bindings', $query->bindings);
-                }
-
-                $helper->logQueries([$queries], $connection);
-            });
+        if ($query instanceof QueryExecuted) {
+            $connection = $query->connection->getName();
+            Arr::set($queries, 'query', $query->sql);
+            Arr::set($queries, 'bindings', $query->bindings);
         }
+
+        $service->logQueries([$queries], $connection);
     }
 
 }

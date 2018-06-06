@@ -138,6 +138,7 @@ Works by default out the box.
 To override a configuration add any of the following to your `config/database.php` file.
 
 ```php
+
 return [
 
     /*
@@ -152,17 +153,59 @@ return [
 
     'query_log' => [
 
-        # Enable query logging only when debugging is enabled and env is local
-        'enabled' => env('APP_DEBUG', false) && env('APP_ENV', 'local') == 'local',
+        // Enable query logging
+        'enabled'    => env('APP_DEBUG', false) && env('APP_ENV', 'local') == 'local',
 
-        # Max files number of files to keep, logs are rotated daily
-        'max_files' => 10,
+        // If enabled, when running in console the listener handler will be forced
+        'console_logging' => false,
 
-        # Type of handler to collect the query lots and action the log writer
-        'handler' => 'middleware', // Options middleware (default) or listener
+        // Max files number of files to keep, logs are rotated daily
+        'max_files'       => 10,
 
-        # Default logging location
-        'log_path' => storage_path('logs/db'),
+        // Type of handler to collect the query lots and action the log writer:
+        // Options middleware or listener
+        'handler'         => 'listener',
+
+        // Default logging location
+        'log_path'        => storage_path('logs/db'),
+
+        // Connections to log
+        // Comma separated database connection names eg: mysql,pgsql,test
+        // all            = all configured connections
+        'connection'      => 'all',
+
+        /*
+         |----------------------------------------------------------------------
+         | Log Formatters
+         |----------------------------------------------------------------------
+         |
+         | Available tokens:
+         |
+         | All
+         | - :env        = environment config variable at time
+         | - :date       = date and time the log was writen
+         | - :connection = database connection
+         | - :label      = request label, URL for http requests, argv for console
+         | - :handler    = DBLoJack handler, middleware or listener
+         |
+         | Query Only
+         | - :time       = execution time of a query (not always available)
+         | - :query      = formatted query
+         |
+         | Boundary entires
+         | - :boundary    = boundary type, before or after
+         |
+         */
+
+        // String format for single query (listener)
+        'log_foramt_single' => '[:date] [:connection] [:env] :time ":query" ":label"',
+        // String format for multiple queries being log at once (middleware)
+        'log_foramt_multi'  => '[:connection] [:env] :time ":query"',
+
+        // Log entries showing for grouping all the logs for single request
+        // Leave empty or null to skip boundary
+        'log_before_boundary' => '---------BOUNDARY :boundary-:handler [:env]---------' . "\n[:date] :label",
+        'log_after_boundary'  => '---------BOUNDARY :boundary---------',
 
     ],
 
@@ -174,12 +217,6 @@ return [
 It is generally a very bad idea to log full database queries in production with actual parameters / bindings as this will end up logging sensitive information like usernames, passwords and sessions ids to a generally low security location in the form of application logs.
 
 For this reason if the Laravel environment is set to `production` or `staging` queries will be logged but without bindings being replace and queries will be left with `?` placeholders.
-
-## Standards
-
-* psr-1
-* psr-2
-* psr-4
 
 ## Contributing
 

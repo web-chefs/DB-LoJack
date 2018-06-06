@@ -46,10 +46,16 @@ class QueryCollection extends AbstractQueryStore
         // Setup Logs collection
         $this->logs = collect();
 
-        // Start query log boundary
-        $this->AddLogBoundary('Before');
+        $logFormat = $this->helper->config('query_log.log_foramt_single');
 
-        $this->queries->each(function(array $query) {
+        // Start query log boundary
+        if ($queries->count() > 1) {
+          $this->AddLogBoundary('before');
+          $logFormat = $this->helper->config('query_log.log_foramt_multi');
+        }
+
+
+        $this->queries->each(function(array $query) use ($logFormat) {
 
             $time     = null;
             $bindings = [];
@@ -60,15 +66,10 @@ class QueryCollection extends AbstractQueryStore
             }
 
             // Create log entry
-            $entry = collect();
-            $entry->put('date', date('Y-m-d H:i:s', time()));
-            $entry->put('time', $time);
-            $entry->put('connection', $this->connectionName);
-            $entry->put('query', $query);
-
-            // Convert log entry to a string
-            $logEntry = $entry->map(function($value, $key) { return sprintf("%s=%s", $key, $value); })
-                              ->implode(', ');
+            $logEntry = $this->formatLog($logFormat, [
+              ':time'  => $time,
+              ':query' => $query,
+            ]);
 
             // Add log entry
             $this->logs->push($logEntry);
@@ -76,7 +77,9 @@ class QueryCollection extends AbstractQueryStore
         });
 
         // End query log boundary
-        $this->addLogBoundary('After');
+        if ($queries->count() > 1) {
+          $this->addLogBoundary('after');
+        }
 
         return $this->logs;
     }
@@ -84,14 +87,51 @@ class QueryCollection extends AbstractQueryStore
     /**
      * Build a formated string for the boundary between log writing as a single
      * request / command can make multiple queries.
+     *
+     * @param string $type
      */
     protected function addLogBoundary($type)
     {
-        $env     = $this->app->make('env');
-        $label   = $this->helper->logLabel();
-        $handler = $this->helper->getHandler();
+        $configKey = "log_{$type}_boundary";
+        $logFormat = $this->helper->config('query_log.' . $configKey);
 
-        $this->logs->push("---------BOUNDRY {$type}-{$handler} [{$env}] ({$label})---------");
+        if (empty($logFormat)) {
+          return;
+        }
+
+        $logEntry  = $this->formatLog($logFormat, [ ':boundary'  => $type ]);
+        $this->logs->push($logEntry);
+    }
+
+    /**
+     * Format a log entry merge common tokens into supplied tokens.
+     *
+     * @param  string $format
+     * @param  array  $tokens
+     *
+     * @return string
+     */
+    protected function formatLog($format, array $tokens)
+    {
+      return $this->helper->formatString($format, $this->getLogTokens($tokens));
+    }
+
+    /**
+     * Collect all tokens for formatting a log entry.
+     *
+     * @param  array  $addition
+     *
+     * @return array
+     */
+    protected function getLogTokens(array $addition = [])
+    {
+      return array_merge([
+        ':date'       => date('Y-m-d H:i:s', time()),
+        ':env'        => $this->app->make('env'),
+        ':label'      => $this->helper->logLabel(),
+        ':handler'    => $this->helper->getHandler(),
+        ':connection' => $this->connectionName,
+      ], $addition);
     }
 
 }

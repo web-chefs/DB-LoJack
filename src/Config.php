@@ -25,7 +25,7 @@ return [
 
         // Type of handler to collect the query lots and action the log writer:
         // Options middleware or listener
-        'handler'         => 'listener',
+        'handler'         => 'middleware',
 
         // Default logging location
         'log_path'        => storage_path('logs/db'),
@@ -67,8 +67,6 @@ return [
         // Leave empty or null to skip boundary
         'log_before_boundary' => '---------BOUNDARY :boundary-:handler [:env]---------' . "\n[:date] :label",
         'log_after_boundary'  => '---------BOUNDARY :boundary---------',
-        // 'log_before_boundary' => null,
-        // 'log_after_boundary'  => null,
 
     ],
 

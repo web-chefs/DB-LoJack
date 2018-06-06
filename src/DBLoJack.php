@@ -24,6 +24,8 @@ use Config;
 class DBLoJack
 {
 
+    const ALL_CONNECTIONS = 'all';
+
     /**
      * The application implementation.
      *
@@ -66,7 +68,34 @@ class DBLoJack
      */
     public function isEnabled()
     {
-        return Config::get('database.query_log.enabled');
+        return $this->config('query_log.enabled');
+    }
+
+    /**
+     * Check if a connection should be logged or ignored.
+     *
+     * @param  string $connection
+     * @return boolean
+     */
+    public function shouldLog($connection)
+    {
+        return in_array($connection, $this->connections());
+    }
+
+    /**
+     * List of all allowed connections.
+     *
+     * @return array
+     */
+    public function connections()
+    {
+        $allowedConnections = $this->config('query_log.connection');
+
+        if ($allowedConnections === static::ALL_CONNECTIONS) {
+            return array_keys($this->config('connections'));
+        }
+
+        return explode(',', $allowedConnections);
     }
 
     /**
@@ -76,7 +105,25 @@ class DBLoJack
      */
     public function getHandler()
     {
-        return $this->app->runningInConsole() ? 'listener' : Config::get('database.query_log.handler');
+        // Only use listener when running in console
+        if ($this->app->runningInConsole() && $this->config('query_log.console_logging')) {
+            return 'listener';
+        }
+
+        return $this->config('query_log.handler');
+    }
+
+    /**
+     * Get the DB LoJack config or sub section.
+     *
+     * @param  string $context
+     *
+     * @return mixed
+     */
+    public function config($context = 'query_log', $default = null)
+    {
+        $context = empty($context) ? '' : '.' . $context;
+        return Config::get('database' . $context, $default);
     }
 
     /**
@@ -261,7 +308,7 @@ class DBLoJack
      *
      * @return  string
      */
-    protected function formatString($string, array $args = array())
+    public function formatString($string, array $args = array())
     {
         // Transform arguments before inserting them.
         foreach ($args as $key => $value) {

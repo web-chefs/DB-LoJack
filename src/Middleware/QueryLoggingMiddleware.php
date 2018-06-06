@@ -29,15 +29,34 @@ class QueryLoggingMiddleware
         }
 
         // Enabled DB logging
-        DB::enableQueryLog();
+        foreach ($helper->connections() as $connection) {
+            DB::connection($connection)->enableQueryLog();
+        }
 
         // Make sure we run after request has been handled.
         $response = $next($request);
 
-        // Log database queries for the request
-        $helper->logQueries( DB::getQueryLog() );
+        // Log Queries
+        $this->logQueries();
 
         // return response
         return $response;
+    }
+
+    /**
+     * Log queries for each connection.
+     *
+     * @return void
+     */
+    public function logQueries()
+    {
+        // DbLoJack Helper
+        $helper = app('db_lojack');
+
+        // Log database queries for the request
+        foreach ($helper->connections() as $connection) {
+            $queries = DB::connection($connection)->getQueryLog();
+            $helper->logQueries($queries, $connection );
+        }
     }
 }

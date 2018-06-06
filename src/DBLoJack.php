@@ -266,7 +266,7 @@ class DBLoJack
      * QueryStore Factory building the default query store.
      *
      * @param  array  $queries
-     * @param  [type] $connectionName
+     * @param  string $connectionName
      *
      * @return QueryStoreInterface
      */

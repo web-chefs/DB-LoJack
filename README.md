@@ -24,7 +24,7 @@ Confirmed to be working:
 * Laravel 5.3 on PHP 5.6
 * Laravel 5.4 on PHP 5.6, 7.0
 * Laravel 5.5 on PHP 7.0, 7.1
-* Laravel 5.6 on PHP 7.0, 7.1
+* Laravel 5.6 on PHP 7.1
 
 ## Install
 

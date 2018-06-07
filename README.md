@@ -19,7 +19,12 @@ Laravel database query logger and debugger that support basic argument replaceme
 
 ## Versions
 
-Developed and tested on Laravel 5.4 using PHP 5.6. Should work on other version, however currently un-tested.
+Confirmed to be working:
+
+* Laravel 5.3 on PHP 5.6
+* Laravel 5.4 on PHP 5.6, 7.0
+* Laravel 5.5 on PHP 7.0, 7.1
+* Laravel 5.6 on PHP 7.0, 7.1
 
 ## Install
 

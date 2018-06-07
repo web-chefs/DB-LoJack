@@ -59,9 +59,9 @@ return [
          */
 
         // String format for single query (listener)
-        'log_foramt_single' => '[:date] [:connection] [:env] :time ":query" ":label"',
+        'log_foramt_single' => '[:date] [:connection] [:env] :time ms ":query" ":label"',
         // String format for multiple queries being log at once (middleware)
-        'log_foramt_multi'  => '[:connection] [:env] :time ":query"',
+        'log_foramt_multi'  => '[:connection] [:env] :time ms ":query"',
 
         // Log entries showing for grouping all the logs for single request
         // Leave empty or null to skip boundary

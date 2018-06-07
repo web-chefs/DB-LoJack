@@ -6,7 +6,6 @@ namespace WebChefs\DBLoJack;
 use WebChefs\DBLoJack\DBLoJack;
 
 // Framework
-use Illuminate\Support\Arr;
 use Illuminate\Support\ServiceProvider;
 use Illuminate\Database\Events\QueryExecuted;
 
@@ -50,9 +49,11 @@ class DBLoJackServiceProvider extends ServiceProvider
         $service = $this->app->make('db_lojack');
 
         // Listener callback
-        $callback = function($query, $bindings = null, $time = null, $connection = null) use ($service) {
+        // Laravel >= 5.2 introduce QueryExecuted event.
+        // So this will not work for 5.1 and below.
+        $callback = function(QueryExecuted $query) use ($service) {
             if ($service->isLogging('listener')) {
-                $this->logQuery($service, $query, $bindings, $time, $connection);
+                $this->logQuery($service, $query);
             }
         };
 
@@ -71,18 +72,16 @@ class DBLoJackServiceProvider extends ServiceProvider
      *
      * @return void
      */
-    protected function logQuery($service, $query, $bindings = null, $time = null, $connection = null)
+    protected function logQuery($service, QueryExecuted $query)
     {
-        // Convert into array
-        $queries    = compact('query', 'bindings', 'time');
-
-        if ($query instanceof QueryExecuted) {
-            $connection = $query->connection->getName();
-            Arr::set($queries, 'query', $query->sql);
-            Arr::set($queries, 'bindings', $query->bindings);
-        }
-
-        $service->logQueries([$queries], $connection);
+        // Convert info into array
+        $connectionName = $query->connection->getName();
+        $queryInfo      = [
+            'query'    => $query->sql,
+            'bindings' => $query->bindings,
+            'time'     => $query->time,
+        ];
+        $service->logQueries([$queryInfo], $connectionName);
     }
 
 }

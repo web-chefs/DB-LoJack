@@ -14,7 +14,7 @@ return [
 
     'query_log' => [
 
-        // Enable query logging
+        // Enable query logging (true/false)
         'enabled'    => env('APP_DEBUG', false) && env('APP_ENV', 'local') == 'local',
 
         // If enabled, when running in console the listener handler will be forced
@@ -67,6 +67,44 @@ return [
         // Leave empty or null to skip boundary
         'log_before_boundary' => '---------BOUNDARY :boundary-:handler [:env]---------' . "\n[:date] :label",
         'log_after_boundary'  => '---------BOUNDARY :boundary---------',
+
+    ],
+
+    /*
+     |--------------------------------------------------------------------------
+     | Lo-Jack Performance Watchdog
+     |--------------------------------------------------------------------------
+     |
+     | Implements a monitoring system were logs are generated if a configured
+     | threshold is exceeded.
+     |
+     */
+
+    'performance_watchdog' => [
+
+        // Default logging location
+        'log_path'    => storage_path('logs/performance'),
+
+        // Operating mode
+        // - false      = turns off all monitoring
+        // - 'summary'  = most light weight logs a single line per a request
+        // - 'detailed' = logs debug details of every database query, good for development
+        // - 'both'     = log summary and detailed
+        'mode'        => false,
+
+        // Size of mini back trace used in detailed log.
+        // Can be integer or false to not log traces
+        'trace'       => 10,
+
+        // The minimum number of times a queries should be run before logging.
+        'min_queries' => 2,
+
+        // Threshold counters
+        'threshold'   => [
+            'time'    => 1000,   // request total time in ms
+            'queries' => 100,    // total query count per request
+            'memory'  => '35MB', // request max memory
+         ],
 
     ],
 

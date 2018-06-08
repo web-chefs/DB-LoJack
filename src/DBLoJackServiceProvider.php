@@ -4,6 +4,7 @@ namespace WebChefs\DBLoJack;
 
 // Package
 use WebChefs\DBLoJack\DBLoJack;
+use WebChefs\DBLoJack\PerformanceWatchdog;
 
 // Framework
 use Illuminate\Support\ServiceProvider;
@@ -20,11 +21,15 @@ class DBLoJackServiceProvider extends ServiceProvider
     public function register()
     {
         // Register our default config
-        $this->mergeConfigFrom(__DIR__ . '/Config.php', 'database');
+        $this->mergeConfigFrom(__DIR__ . '/Config.php', 'db-lojack');
 
         // Facade
         $this->app->singleton('db_lojack', function ($app) {
             return $app->make(DBLoJack::class);
+        });
+
+        $this->app->singleton('db_lojack.performance_watchdog', function ($app) {
+            return $app->make(PerformanceWatchdog::class);
         });
     }
 
@@ -35,6 +40,10 @@ class DBLoJackServiceProvider extends ServiceProvider
      */
     public function boot()
     {
+        // Publish Package Config
+        $this->publishes([ __DIR__ . '/Config.php' => config_path('db-lojack.php') ], 'config');
+
+        // Add database query listener
         $this->addQueryLogListeners();
     }
 
@@ -45,15 +54,20 @@ class DBLoJackServiceProvider extends ServiceProvider
      */
     protected function addQueryLogListeners()
     {
-        // DB LoJack Service
-        $service = $this->app->make('db_lojack');
+        // Services
+        $service     = $this->app->make('db_lojack');
+        $performance = $this->app->make('db_lojack.performance_watchdog');
 
         // Listener callback
         // Laravel >= 5.2 introduce QueryExecuted event.
         // So this will not work for 5.1 and below.
-        $callback = function(QueryExecuted $query) use ($service) {
+        $callback = function(QueryExecuted $query) use ($service, $performance) {
             if ($service->isLogging('listener')) {
                 $this->logQuery($service, $query);
+            }
+
+            if ($performance->isActive()) {
+                $performance->logQuery( $query->sql );
             }
         };
 

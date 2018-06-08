@@ -136,14 +136,114 @@ DBLog::isQueryable($query);
 DBLog::isQueryable($query, false);
 ```
 
+## Logs
+
+__Query Logs__
+
+Query logs will log individual queries to a text file rotated daily.
+
+EG: `storage/logs/db/db_query.console.2018-06-06.log`.
+
+__Performance Watchdog Logs__
+
+A `PerformanceWatchdog` class will collect statistics and queries and if a metric threshold is equaled or exceeded it will write a log.
+
+**Summary Log:**
+
+Records a single line per a request of the totals.
+
+```
+20180608 12:06:12: Time: 5ms, Version: 7.0.14, DB Queries: 8, Memory: 14 MiB, Request: "CLI: ./vendor/bin/phpunit"
+20180608 12:07:35: Time: 10ms, Version: 7.0.14, DB Queries: 25, Memory: 35 MiB, Request: "http://localhost/login"
+```
+
+**Detailed Log:**
+
+A log of each query run including with counters for each query and a mini stacktrace for each unique path to that query.
+
+```
+START===========================================================================
+Date:           20180608 12:06:12
+Time:           54ms
+Version:        7.0.14
+Request:        "CLI: ./vendor/bin/phpunit"
+Memory Start:       10 MiB
+Memory Current:     14 MiB
+Memory Usage:       3.18 MiB
+Memory Max Peak:    13.18 MiB
+DB Queries:         8
+--------------------------------------------------------------------------------
+Usage Count:        2
+Trace Count:        2
+--------------------------------------------------------------------------------
+select * from sqlite_master where type = 'table' and name = ?
+--------------------------------------------------------------------------------
+
+1) /var/www/site/vendor/WebChefs/DB-LoJack/src/PerformanceWatchdog.php(497): Illuminate\Support\Facades\Facade::__callStatic('simpleTrace', Array)
+    2) /var/www/site/vendor/WebChefs/DB-LoJack/src/DBLoJackServiceProvider.php(70): WebChefs\DBLoJack\PerformanceWatchdog->logQuery('select * from s...')
+    3) /var/www/site/vendor/laravel/framework/src/Illuminate/Events/Dispatcher.php(348): WebChefs\DBLoJack\DBLoJackServiceProvider->WebChefs\DBLoJack\{closure}(Object(Illuminate\Database\Events\QueryExecuted))
+    4) /var/www/site/vendor/laravel/framework/src/Illuminate/Events/Dispatcher.php(199): Illuminate\Events\Dispatcher->Illuminate\Events\{closure}('Illuminate\\Data...', Array)
+    5) /var/www/site/vendor/laravel/framework/src/Illuminate/Database/Connection.php(808): Illuminate\Events\Dispatcher->dispatch('Illuminate\\Data...')
+    6) /var/www/site/vendor/laravel/framework/src/Illuminate/Database/Connection.php(665): Illuminate\Database\Connection->event(Object(Illuminate\Database\Events\QueryExecuted))
+    7) /var/www/site/vendor/laravel/framework/src/Illuminate/Database/Connection.php(618): Illuminate\Database\Connection->logQuery('select * from s...', Array, 0.52)
+    8) /var/www/site/vendor/laravel/framework/src/Illuminate/Database/Connection.php(326): Illuminate\Database\Connection->run('select * from s...', Array, Object(Closure))
+    9) /var/www/site/vendor/laravel/framework/src/Illuminate/Database/Schema/Builder.php(72): Illuminate\Database\Connection->select('select * from s...', Array)
+    10) /var/www/site/vendor/laravel/framework/src/Illuminate/Database/Migrations/DatabaseMigrationRepository.php(154): Illuminate\Database\Schema\Builder->hasTable('migrations')
+
+1) /var/www/site/vendor/WebChefs/DB-LoJack/src/PerformanceWatchdog.php(497): Illuminate\Support\Facades\Facade::__callStatic('simpleTrace', Array)
+    2) /var/www/site/vendor/WebChefs/DB-LoJack/src/DBLoJackServiceProvider.php(70): WebChefs\DBLoJack\PerformanceWatchdog->logQuery('select * from s...')
+    3) /var/www/site/vendor/laravel/framework/src/Illuminate/Events/Dispatcher.php(348): WebChefs\DBLoJack\DBLoJackServiceProvider->WebChefs\DBLoJack\{closure}(Object(Illuminate\Database\Events\QueryExecuted))
+    4) /var/www/site/vendor/laravel/framework/src/Illuminate/Events/Dispatcher.php(199): Illuminate\Events\Dispatcher->Illuminate\Events\{closure}('Illuminate\\Data...', Array)
+    5) /var/www/site/vendor/laravel/framework/src/Illuminate/Database/Connection.php(808): Illuminate\Events\Dispatcher->dispatch('Illuminate\\Data...')
+    6) /var/www/site/vendor/laravel/framework/src/Illuminate/Database/Connection.php(665): Illuminate\Database\Connection->event(Object(Illuminate\Database\Events\QueryExecuted))
+    7) /var/www/site/vendor/laravel/framework/src/Illuminate/Database/Connection.php(618): Illuminate\Database\Connection->logQuery('select * from s...', Array, 0.06)
+    8) /var/www/site/vendor/laravel/framework/src/Illuminate/Database/Connection.php(326): Illuminate\Database\Connection->run('select * from s...', Array, Object(Closure))
+    9) /var/www/site/vendor/laravel/framework/src/Illuminate/Database/Schema/Builder.php(72): Illuminate\Database\Connection->select('select * from s...', Array)
+    10) /var/www/site/vendor/laravel/framework/src/Illuminate/Database/Migrations/DatabaseMigrationRepository.php(154): Illuminate\Database\Schema\Builder->hasTable('migrations')
+
+--------------------------------------------------------------------------------
+Usage Count:        2
+Trace Count:        2
+--------------------------------------------------------------------------------
+delete from "jobs" where "id" = ?
+--------------------------------------------------------------------------------
+
+1) /var/www/site/vendor/WebChefs/DB-LoJack/src/PerformanceWatchdog.php(497): Illuminate\Support\Facades\Facade::__callStatic('simpleTrace', Array)
+    2) /var/www/site/vendor/WebChefs/DB-LoJack/src/DBLoJackServiceProvider.php(70): WebChefs\DBLoJack\PerformanceWatchdog->logQuery('delete from "jo...')
+    3) /var/www/site/vendor/laravel/framework/src/Illuminate/Events/Dispatcher.php(348): WebChefs\DBLoJack\DBLoJackServiceProvider->WebChefs\DBLoJack\{closure}(Object(Illuminate\Database\Events\QueryExecuted))
+    4) /var/www/site/vendor/laravel/framework/src/Illuminate/Events/Dispatcher.php(199): Illuminate\Events\Dispatcher->Illuminate\Events\{closure}('Illuminate\\Data...', Array)
+    5) /var/www/site/vendor/laravel/framework/src/Illuminate/Database/Connection.php(808): Illuminate\Events\Dispatcher->dispatch('Illuminate\\Data...')
+    6) /var/www/site/vendor/laravel/framework/src/Illuminate/Database/Connection.php(665): Illuminate\Database\Connection->event(Object(Illuminate\Database\Events\QueryExecuted))
+    7) /var/www/site/vendor/laravel/framework/src/Illuminate/Database/Connection.php(618): Illuminate\Database\Connection->logQuery('delete from "jo...', Array, 0.05)
+    8) /var/www/site/vendor/laravel/framework/src/Illuminate/Database/Connection.php(477): Illuminate\Database\Connection->run('delete from "jo...', Array, Object(Closure))
+    9) /var/www/site/vendor/laravel/framework/src/Illuminate/Database/Connection.php(428): Illuminate\Database\Connection->affectingStatement('delete from "jo...', Array)
+    10) /var/www/site/vendor/laravel/framework/src/Illuminate/Database/Query/Builder.php(2225): Illuminate\Database\Connection->delete('delete from "jo...', Array)
+
+1) /var/www/site/vendor/WebChefs/DB-LoJack/src/PerformanceWatchdog.php(497): Illuminate\Support\Facades\Facade::__callStatic('simpleTrace', Array)
+    2) /var/www/site/vendor/WebChefs/DB-LoJack/src/DBLoJackServiceProvider.php(70): WebChefs\DBLoJack\PerformanceWatchdog->logQuery('delete from "jo...')
+    3) /var/www/site/vendor/laravel/framework/src/Illuminate/Events/Dispatcher.php(348): WebChefs\DBLoJack\DBLoJackServiceProvider->WebChefs\DBLoJack\{closure}(Object(Illuminate\Database\Events\QueryExecuted))
+    4) /var/www/site/vendor/laravel/framework/src/Illuminate/Events/Dispatcher.php(199): Illuminate\Events\Dispatcher->Illuminate\Events\{closure}('Illuminate\\Data...', Array)
+    5) /var/www/site/vendor/laravel/framework/src/Illuminate/Database/Connection.php(808): Illuminate\Events\Dispatcher->dispatch('Illuminate\\Data...')
+    6) /var/www/site/vendor/laravel/framework/src/Illuminate/Database/Connection.php(665): Illuminate\Database\Connection->event(Object(Illuminate\Database\Events\QueryExecuted))
+    7) /var/www/site/vendor/laravel/framework/src/Illuminate/Database/Connection.php(618): Illuminate\Database\Connection->logQuery('delete from "jo...', Array, 0.02)
+    8) /var/www/site/vendor/laravel/framework/src/Illuminate/Database/Connection.php(477): Illuminate\Database\Connection->run('delete from "jo...', Array, Object(Closure))
+    9) /var/www/site/vendor/laravel/framework/src/Illuminate/Database/Connection.php(428): Illuminate\Database\Connection->affectingStatement('delete from "jo...', Array)
+    10) /var/www/site/vendor/laravel/framework/src/Illuminate/Database/Query/Builder.php(2225): Illuminate\Database\Connection->delete('delete from "jo...', Array)
+
+END=============================================================================
+```
+
 ## Configurations
 
-Works by default out the box.
+To customize the configuration publish the `config/db-lojack.php`.
 
-To override a configuration add any of the following to your `config/database.php` file.
+```
+php artisan vendor:publish --provider="WebChefs\DBLoJack\DBLoJackServiceProvider" --tag="config"
+```
+
+__Default Config__
 
 ```php
-
 return [
 
     /*
@@ -169,7 +269,7 @@ return [
 
         // Type of handler to collect the query lots and action the log writer:
         // Options middleware or listener
-        'handler'         => 'listener',
+        'handler'         => 'middleware',
 
         // Default logging location
         'log_path'        => storage_path('logs/db'),
@@ -203,14 +303,52 @@ return [
          */
 
         // String format for single query (listener)
-        'log_foramt_single' => '[:date] [:connection] [:env] :time ":query" ":label"',
+        'log_foramt_single' => '[:date] [:connection] [:env] :time ms ":query" ":label"',
         // String format for multiple queries being log at once (middleware)
-        'log_foramt_multi'  => '[:connection] [:env] :time ":query"',
+        'log_foramt_multi'  => '[:connection] [:env] :time ms ":query"',
 
         // Log entries showing for grouping all the logs for single request
         // Leave empty or null to skip boundary
         'log_before_boundary' => '---------BOUNDARY :boundary-:handler [:env]---------' . "\n[:date] :label",
         'log_after_boundary'  => '---------BOUNDARY :boundary---------',
+
+    ],
+
+    /*
+     |--------------------------------------------------------------------------
+     | Lo-Jack Performance Watchdog
+     |--------------------------------------------------------------------------
+     |
+     | Implements a monitoring system were logs are generated if a configured
+     | threshold is exceeded.
+     |
+     */
+
+    'performance_watchdog' => [
+
+        // Default logging location
+        'log_path'    => storage_path('logs/performance'),
+
+        // Operating mode
+        // - false      = turns off all monitoring
+        // - 'summary'  = most light weight logs a single line per a request
+        // - 'detailed' = logs debug details of every database query, good for development
+        // - 'both'     = log summary and detailed
+        'mode'        => false,
+
+        // Size of mini back trace used in detailed log.
+        // Can be integer or false to not log traces
+        'trace'       => 10,
+
+        // The minimum number of times a queries should be run before logging.
+        'min_queries' => 2,
+
+        // Threshold counters
+        'threshold'   => [
+            'time'    => 1000,   // request total time in ms
+            'queries' => 100,    // total query count per request
+            'memory'  => '35MB', // request max memory
+         ],
 
     ],
 

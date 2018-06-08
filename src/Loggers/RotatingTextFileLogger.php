@@ -32,7 +32,7 @@ class RotatingTextFileLogger
     public function __construct(QueryStoreInterface $queries)
     {
         $this->queries    = $queries;
-        $this->maxFiles   = (int)Config::get('database.query_log.max_files');
+        $this->maxFiles   = (int)Config::get('db-lojack.query_log.max_files');
         $this->mustRotate = false;
     }
 
@@ -60,7 +60,7 @@ class RotatingTextFileLogger
      */
     protected function setLogFile()
     {
-        $logPath       = Config::get('database.query_log.log_path');
+        $logPath       = Config::get('db-lojack.query_log.log_path');
         $this->logFile = $logPath . '/db_query.' . $this->queries->context . '.' . date('Y-m-d') . '.log';
 
         if (!File::exists($this->logFile)) {

@@ -3,6 +3,7 @@
 namespace WebChefs\DBLoJack;
 
 // PHP
+use Exception;
 use InvalidArgumentException;
 
 // Package
@@ -92,7 +93,7 @@ class DBLoJack
         $allowedConnections = $this->config('query_log.connection');
 
         if ($allowedConnections === static::ALL_CONNECTIONS) {
-            return array_keys($this->config('connections'));
+            return array_keys(Config::get('database.connections', []));
         }
 
         return explode(',', $allowedConnections);
@@ -123,7 +124,7 @@ class DBLoJack
     public function config($context = 'query_log', $default = null)
     {
         $context = empty($context) ? '' : '.' . $context;
-        return Config::get('database' . $context, $default);
+        return Config::get('db-lojack' . $context, $default);
     }
 
     /**
@@ -324,6 +325,36 @@ class DBLoJack
             }
         }
         return strtr($string, $args);
+    }
+
+    /**
+     * Provide a mini Call Stack Trace, used by ddd().
+     *
+     * @param  integer $last
+     *
+     * @return string
+     */
+    public function simpleTrace($limit = 0)
+    {
+        $e = new Exception();
+        $trace = explode("\n", $e->getTraceAsString());
+
+        array_shift($trace); // remove call to this method
+        array_pop($trace);   // remove {main}
+
+        $length = count($trace);
+        $result = array();
+
+        for ($i = 0; $i < $limit; $i++)
+        {
+            if ($length == $i) {
+                break;
+            }
+
+            // replace '#someNum' with '$i)', set the right ordering
+            $result[] = ($i + 1)  . ')' . substr($trace[$i], strpos($trace[$i], ' '));
+        }
+        return implode("\n\t", $result);
     }
 
 }

@@ -101,8 +101,8 @@ return [
 
         // Threshold counters
         'threshold'   => [
-            'time'    => 1000,   // request total time in ms
-            'queries' => 100,    // total query count per request
+            'time'    => 500,    // request total time in ms
+            'queries' => 50,     // total query count per request
             'memory'  => '35MB', // request max memory
          ],
 

@@ -58,7 +58,7 @@ class DBLoJackTest extends TestCase
         $this->app      = $this->resolver->app();
 
         // Enable query logging
-        $this->resolver->config()->set('database.query_log.enabled', true);
+        $this->resolver->config()->set('db-lojack.query_log.enabled', true);
 
         // Run our database migrations
         $this->artisan('migrate:refresh', [ '--force' => 1 ]);
@@ -96,7 +96,7 @@ class DBLoJackTest extends TestCase
         $count = 0;
 
         // Run with listener
-        $this->resolver->config()->set('database.query_log.handler', 'listener');
+        $this->resolver->config()->set('db-lojack.query_log.handler', 'listener');
         DB::table('test')->insert($this->data);
         $test = DB::table('test')->get();
         $count += count($this->data);
@@ -104,7 +104,7 @@ class DBLoJackTest extends TestCase
         $this->assertEquals($count, $test->count());
 
         // Run with middleware
-        $this->resolver->config()->set('database.query_log.handler', 'middleware');
+        $this->resolver->config()->set('db-lojack.query_log.handler', 'middleware');
         $middleware = $this->simulateMiddleware();
         DB::table('test')->insert($this->data);
         $test = DB::table('test')->get();

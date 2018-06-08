@@ -144,20 +144,6 @@ class PerformanceWatchdog
     }
 
     /**
-     * Format a microtime float value into Hours:Minutes:Seconds.Microseconds
-     *
-     * @param  float    $time
-     *
-     * @return string
-     */
-    // public static function formatMicrotime($time, $precision = 4)
-    // {
-    //     $time = (string)$time === '0' ? '0.0' : $time;
-    //     list($sec, $usec) = explode('.', (string)$time);
-    //     return date('H:i:s', $sec) . '.' . Str::limit($usec, $precision, '');
-    // }
-
-    /**
      * Convert a string form of memory to bytes.
      *
      * EG: 10MB / 10mb

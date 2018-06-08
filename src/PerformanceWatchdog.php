@@ -21,11 +21,6 @@ class PerformanceWatchdog
 {
 
     /**
-     * @var DbLogger
-     */
-    protected $DBLoJack;
-
-    /**
      * @var Filesystem
      */
     protected $fileHelper;
@@ -53,10 +48,9 @@ class PerformanceWatchdog
     /**
      * Construct an instance
      */
-    public function __construct(Stopwatch $stopwatch, DbLogger $DBLoJack, Filesystem $fileHelper)
+    public function __construct(Stopwatch $stopwatch, Filesystem $fileHelper)
     {
         $this->queries     = collect();
-        $this->DBLoJack    = $DBLoJack;
         $this->stopwatch   = $stopwatch;
         $this->memoryStart = memory_get_usage(true);
         $this->fileHelper  = $fileHelper;
@@ -494,7 +488,7 @@ class PerformanceWatchdog
 
         // Add stack trace
         if ($this->shouldTrace()) {
-            $trace = ($traceSize == false || $traceSize < 1) ? 'no trace' : $this->DBLoJack->simpleTrace($traceSize);
+            $trace = ($traceSize == false || $traceSize < 1) ? 'no trace' : DbLogger::simpleTrace($traceSize);
             $log->addTrace($trace);
         }
 

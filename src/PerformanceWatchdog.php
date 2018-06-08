@@ -494,7 +494,7 @@ class PerformanceWatchdog
 
         // Add stack trace
         if ($this->shouldTrace()) {
-            $trace = ($traceSize == false || $traceSize < 1) ? 'no trace' : $this->DBLoJack::simpleTrace($traceSize);
+            $trace = ($traceSize == false || $traceSize < 1) ? 'no trace' : $this->DBLoJack->simpleTrace($traceSize);
             $log->addTrace($trace);
         }
 

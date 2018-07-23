@@ -84,13 +84,18 @@ return [
 
         // Default logging location
         'log_path'    => storage_path('logs/performance'),
-
+        
+        // APP Environment limiting
+        //      !in_array(env('APP_ENV', 'testing'), [ 'testing' ]) ? {LIVE MODE} : {TESTING MODE},
+        //
         // Operating mode
         // - false      = turns off all monitoring
         // - 'summary'  = most light weight logs a single line per a request
         // - 'detailed' = logs debug details of every database query, good for development
         // - 'both'     = log summary and detailed
-        'mode'        => false,
+        //
+        //                                                                   ?{LIVE} :{TESTING}
+        'mode'        => !in_array(env('APP_ENV', 'testing'), [ 'testing' ]) ? false : false,
 
         // Size of mini back trace used in detailed log.
         // Can be integer or false to not log traces

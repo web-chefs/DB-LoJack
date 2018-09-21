@@ -19,6 +19,7 @@ use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Contracts\Foundation\Application;
 
 // Aliases
+use DB;
 use Log;
 use Config;
 
@@ -138,7 +139,12 @@ class DBLoJack
     public function formatQuery($query)
     {
         $this->isQueryable($query);
-        return $this->formatSql($query->toSql(), $query->getBindings());
+
+        $bindings = [];
+        $query    = $this->getQueryData($query);
+
+        extract($query, EXTR_IF_EXISTS);
+        return $this->formatSql($query, $bindings);
     }
 
     /**
@@ -221,13 +227,43 @@ class DBLoJack
         $this->isQueryable($query);
 
         $connectionName = $query->getConnection()->getName();
-        $queryData      = [
-            'query'    => $query->toSql(),
-            'bindings' => $query->getBindings(),
-        ];
+        $queryData      = $this->getQueryData($query);
         $queryStore     = $this->makeQueryStore([ $queryData ], $connectionName);
 
         $this->makeLogger($queryStore)->writeLogs();
+    }
+
+    /**
+     * Common way of preparing the sql and bindings into an array.
+     *
+     * @param  Model|Builder $query
+     *
+     * @return array
+     */
+    public function getQueryData($query)
+    {
+        $bindings = $query->getBindings();
+
+        return [
+            'query'    => $query->toSql(),
+            'bindings' => $this->prepareBindings($query->getConnection(), $bindings),
+        ];
+    }
+
+    /**
+     * Prepare the bindings using the connection specific prepare method.
+     *
+     * @param  ConnectionInterface  $connection
+     * @param  array                $bindings
+     *
+     * @return array
+     */
+    public function prepareBindings($connection, array $bindings)
+    {
+        if (is_string($connection)) {
+            $connection = DB::connection($connection);
+        }
+        return $connection->prepareBindings($bindings);
     }
 
     /**
@@ -273,13 +309,15 @@ class DBLoJack
      */
     public function makeQueryStore(array $queries, $connectionName = null)
     {
-        $queries = collect($queries)->transform(function ($query) {
+        $queries = collect($queries)->transform(function ($query) use ($connectionName) {
+            if (is_array($query)) {
+                $bindings = array_get($query, 'bindings', []);
+                $bindings = $this->prepareBindings($connectionName, $bindings);
+                array_set($query, 'bindings', $bindings);
+            }
             // Handle query objects
             if (is_object($query) && $this->isQueryable($query)) {
-                $query = [
-                    'query'    => $query->toSql(),
-                    'bindings' => $query->getBindings(),
-                ];
+                $query = $this->getQueryData($query);
             }
             return $query;
         });
